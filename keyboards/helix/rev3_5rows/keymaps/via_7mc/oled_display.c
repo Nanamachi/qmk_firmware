@@ -31,36 +31,37 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return OLED_ROTATION_270;
 }
 
-void render_status(void) {
-
+void render_mode_status(void) {
   // Host Keyboard Layer Status
-  oled_write_ln_P(PSTR("MODE:"), false);
+  oled_write_P(PSTR("MODE:\n"), false);
 
   switch (get_highest_layer(layer_state)) {
       case _QWERTY:
-          oled_write_ln_P(PSTR("qwu-,"), false);
+          oled_write_P(PSTR("qwu-,"), false);
           break;
       case _LOWER:
-          oled_write_ln_P(PSTR("qwert"), false);
+          oled_write_P(PSTR("qwert"), true);
           break;
       case _RAISE:
-          oled_write_ln_P(PSTR("LWR->"), false);
+          oled_write_P(PSTR("LWR"), false);
+          oled_write_P(PSTR("\x03\x04"), false);
           break;
       case _ADJUST:
-          oled_write_ln_P(PSTR("<-UPR"), false);
+          oled_write_P(PSTR("\x05\x06"), false);
+          oled_write_P(PSTR("UPR"), false);
           break;
       default:
           // Or use the write_ln shortcut over adding '\n' to the end of your string
-          oled_write_ln_P(PSTR("undef"), false);
+          oled_write_P(PSTR("undef"), false);
   }
+}
 
-  oled_write_P(PSTR("\n-----\n"), false);
-
+void render_lock_status(void) {
   // Host Keyboard LED Status
   led_t led_state = host_keyboard_led_state();
-  oled_write_ln_P(led_state.num_lock ? PSTR("NumLk") : PSTR(""), false);
-  oled_write_ln_P(led_state.caps_lock ? PSTR("CpsLk") : PSTR(""), false);
-  oled_write_ln_P(led_state.scroll_lock ? PSTR("ScrLk") : PSTR(""), false);
+  oled_write_P(led_state.num_lock ? PSTR("NumLk") : PSTR("     "), false);
+  oled_write_P(led_state.caps_lock ? PSTR("CpsLk") : PSTR("     "), false);
+  oled_write_P(led_state.scroll_lock ? PSTR("ScrLk") : PSTR("     "), false);
 }
 
 
@@ -76,10 +77,10 @@ static void render_logo(void) {
 
 static void render_rgbled_status(bool full) {
 #ifdef RGBLIGHT_ENABLE
-  char buf[30];
+  char buf[24];
   if (RGBLIGHT_MODES > 1 && rgblight_is_enabled()) {
       if (full) {
-          snprintf(buf, sizeof(buf), " LED %2d: %d,%d,%d ",
+          snprintf(buf, sizeof(buf), "M| %2dH| %2dS| %2dV| %2d",
                    rgblight_get_mode(),
                    rgblight_get_hue()/RGBLIGHT_HUE_STEP,
                    rgblight_get_sat()/RGBLIGHT_SAT_STEP,
@@ -87,14 +88,20 @@ static void render_rgbled_status(bool full) {
       } else {
           snprintf(buf, sizeof(buf), "[%2d] ", rgblight_get_mode());
       }
-      oled_write(buf, false);
+  } else {
+      snprintf(buf, sizeof(buf), "      LED  OFF      ");
   }
+  oled_write(buf, false);
 #endif
 }
 
 bool oled_task_user(void) {
   if(is_keyboard_master()){
-    render_status();
+    render_mode_status();
+      oled_write_P(PSTR("\n-----\n"), false);
+    render_lock_status();
+      oled_write_P(PSTR("\n-----\n"), false);
+    render_rgbled_status(true);
   }else{
     render_logo();
     render_rgbled_status(true);
