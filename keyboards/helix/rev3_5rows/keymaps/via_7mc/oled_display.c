@@ -20,10 +20,10 @@
 
 // Defines names for use in layer keycodes and the keymap
 enum layer_names {
-  _QWERTY = 0,
+  _DEFAULT = 0,
+  _QWERTY,
   _LOWER,
-  _RAISE,
-  _ADJUST
+  _UPPER
 };
 
 #ifdef OLED_ENABLE
@@ -36,17 +36,17 @@ void render_mode_status(void) {
   oled_write_P(PSTR("MODE:\n"), false);
 
   switch (get_highest_layer(layer_state)) {
-      case _QWERTY:
+      case _DEFAULT:
           oled_write_P(PSTR("qwu-,"), false);
           break;
-      case _LOWER:
+      case _QWERTY:
           oled_write_P(PSTR("qwert"), true);
           break;
-      case _RAISE:
+      case _LOWER:
           oled_write_P(PSTR("LWR"), false);
           oled_write_P(PSTR("\x03\x04"), false);
           break;
-      case _ADJUST:
+      case _UPPER:
           oled_write_P(PSTR("\x05\x06"), false);
           oled_write_P(PSTR("UPR"), false);
           break;
@@ -102,7 +102,7 @@ bool oled_task_user(void) {
     render_mode_status();
       oled_write_P(PSTR("\n-----\n"), false);
 
-    if (get_highest_layer(layer_state) == _RAISE) {
+    if (get_highest_layer(layer_state) == _LOWER) {
       render_rgbled_status(true);
     } else {
       render_lock_status();
