@@ -33,14 +33,14 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 
 void render_mode_status(void) {
   // Host Keyboard Layer Status
-  oled_write_P(PSTR("MODE:\n"), false);
+  oled_write_P(PSTR("\n"), false);
 
   switch (get_highest_layer(layer_state)) {
       case _DEFAULT:
-          oled_write_P(PSTR("qwu-,"), false);
+          oled_write_P(PSTR("\n"), false);
           break;
       case _QWERTY:
-          oled_write_P(PSTR("qwert"), true);
+          oled_write_P(PSTR("QWERT"), true);
           break;
       case _LOWER:
           oled_write_P(PSTR("LWR"), false);
@@ -52,9 +52,19 @@ void render_mode_status(void) {
           break;
       default:
           // Or use the write_ln shortcut over adding '\n' to the end of your string
-          oled_write_P(PSTR("undef"), false);
+          oled_write_P(PSTR("undef"), true);
   }
+
+  oled_write_P(PSTR("\n"), false);
 }
+
+
+void render_horizontal_line(void) {
+    oled_write_P(PSTR("\n"), false);
+    oled_write_P(PSTR("\x1c\x1c\x1c\x1c\x1c"), false);
+    oled_write_P(PSTR("\n"), false);
+}
+
 
 void render_lock_status(void) {
   // Host Keyboard LED Status
@@ -98,9 +108,9 @@ static void render_rgbled_status(bool full) {
 bool oled_task_user(void) {
   if(is_keyboard_master()){
     render_logo();
-      oled_write_P(PSTR("\n-----\n"), false);
+        render_horizontal_line();
     render_mode_status();
-      oled_write_P(PSTR("\n-----\n"), false);
+        render_horizontal_line();
 
     if (get_highest_layer(layer_state) == _LOWER) {
       render_rgbled_status(true);
@@ -110,6 +120,7 @@ bool oled_task_user(void) {
     }
   }else{
     render_logo();
+        render_horizontal_line();
     render_rgbled_status(true);
   }
     return false;
