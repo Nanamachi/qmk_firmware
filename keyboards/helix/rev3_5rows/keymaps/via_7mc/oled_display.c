@@ -17,6 +17,7 @@
 #include QMK_KEYBOARD_H
 
 #include <stdio.h>
+#include "split_util.h"
 
 // Defines names for use in layer keycodes and the keymap
 enum layer_names {
@@ -109,6 +110,29 @@ static void render_rgbled_status(bool full) {
 #endif
 }
 
+static void render_rgbled_mode(void) {
+#ifdef RGBLIGHT_ENABLE
+  char buf[24];
+    snprintf(buf, sizeof(buf), "Mode %5dSpd  %5d",
+        rgblight_get_mode(),
+        rgblight_get_speed()
+    );
+  oled_write(buf, false);
+#endif
+}
+
+static void render_rgbled_color(void) {
+#ifdef RGBLIGHT_ENABLE
+  char buf[24];
+    snprintf(buf, sizeof(buf), "H| %2dS| %2dV| %2d",
+        rgblight_get_hue()/RGBLIGHT_HUE_STEP,
+        rgblight_get_sat()/RGBLIGHT_SAT_STEP,
+        rgblight_get_val()/RGBLIGHT_VAL_STEP
+    );
+  oled_write(buf, false);
+#endif
+}
+
 bool oled_task_user(void) {
   if(is_keyboard_master()){
     render_logo();
@@ -116,11 +140,11 @@ bool oled_task_user(void) {
     render_mode_status();
         render_horizontal_line();
 
-    if (get_highest_layer(layer_state) != _LOWER) {
+    if ( !is_transport_connected() && get_highest_layer(layer_state) != _LOWER) {
         layer_lower_timer = timer_read() + RGBLED_STATUS_DELAY;
     }
 
-    if (timer_expired(timer_read(), layer_lower_timer)) {
+    if ( !is_transport_connected() && timer_expired(timer_read(), layer_lower_timer) ) {
       render_rgbled_status(true);
     } else {
       render_lock_status();
@@ -129,7 +153,9 @@ bool oled_task_user(void) {
   }else{
     render_logo();
         render_horizontal_line();
-    render_rgbled_status(true);
+    render_rgbled_mode();
+        render_horizontal_line();
+    render_rgbled_color();
   }
     return false;
 }
