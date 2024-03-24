@@ -80,14 +80,14 @@ void render_lock_status(void) {
 }
 
 
-static void render_logo(void) {
+static void render_logo(bool invert) {
     static const char PROGMEM nanamachi_logo[] = {
         0x80, 0x81, 0x82, 0x83, 0x84,
         0xA0, 0xA1, 0xA2, 0xA3, 0xA4,
         0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0x00
     };
 
-    oled_write_P(nanamachi_logo, false);
+    oled_write_P(nanamachi_logo, invert);
 }
 
 static void render_rgbled_status(bool full) {
@@ -134,13 +134,18 @@ static void render_rgbled_color(void) {
 }
 
 bool oled_task_user(void) {
-  if(is_keyboard_master()){
-    render_logo();
+  // Render logo for both master and slave
+    render_logo(!is_transport_connected());
         render_horizontal_line();
+
+  if(is_keyboard_master()){
     render_mode_status();
         render_horizontal_line();
 
     if (!is_transport_connected()) {
+        // If the keyboard is used as a single keyboard,
+        // render RGB LED status on holding Lower key with a delay
+
         if (get_highest_layer(layer_state) != _LOWER) {
             layer_lower_timer = timer_read() + RGBLED_STATUS_DELAY;
         }
@@ -150,12 +155,12 @@ bool oled_task_user(void) {
             return false;
         }
     }
+    // Otherwise, render Lock status
     render_lock_status();
     oled_write_P(PSTR("     "), false);
 
   }else{
-    render_logo();
-        render_horizontal_line();
+    // Render RGB LED status for the slave
     render_rgbled_mode();
         render_horizontal_line();
     render_rgbled_color();
