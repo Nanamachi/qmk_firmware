@@ -140,16 +140,19 @@ bool oled_task_user(void) {
     render_mode_status();
         render_horizontal_line();
 
-    if ( !is_transport_connected() && get_highest_layer(layer_state) != _LOWER) {
-        layer_lower_timer = timer_read() + RGBLED_STATUS_DELAY;
-    }
+    if (!is_transport_connected()) {
+        if (get_highest_layer(layer_state) != _LOWER) {
+            layer_lower_timer = timer_read() + RGBLED_STATUS_DELAY;
+        }
 
-    if ( !is_transport_connected() && timer_expired(timer_read(), layer_lower_timer) ) {
-      render_rgbled_status(true);
-    } else {
-      render_lock_status();
-      oled_write_P(PSTR("     "), false);
+        if (timer_expired(timer_read(), layer_lower_timer)) {
+            render_rgbled_status(true);
+            return false;
+        }
     }
+    render_lock_status();
+    oled_write_P(PSTR("     "), false);
+
   }else{
     render_logo();
         render_horizontal_line();
